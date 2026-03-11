@@ -1,0 +1,22 @@
+#!/bin/sh
+
+DAEMON="aesdsocket"
+PIDFILE="/var/run/$DAEMON.pid"
+
+case "$1" in
+    start)
+        echo "Starting $DAEMON"
+        # -d tells your app to daemonize
+        start-stop-daemon -S -n $DAEMON -a /usr/bin/$DAEMON -- -d
+        ;;
+    stop)
+        echo "Stopping $DAEMON"
+        # -s TERM sends the SIGTERM for graceful exit
+        start-stop-daemon -K -n $DAEMON -s TERM
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+esac
+
+exit 0
