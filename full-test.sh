@@ -33,6 +33,7 @@ if [ -f conf/assignment.txt ]; then
     assignment=`cat conf/assignment.txt`
     if [ -f ./assignment-autotest/test/${assignment}/assignment-test.sh ]; then
         echo "Executing assignment test script"
+        ulimit -n 1024
         ./assignment-autotest/test/${assignment}/assignment-test.sh $test_dir
         rc=$?
         if [ $rc -eq 0 ]; then
