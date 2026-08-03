@@ -14,6 +14,10 @@ PIDFILE="/var/run/$DAEMON.pid"
 
 case "$1" in
     start)
+        echo "Loading aesdchar"
+
+        insmod /lib/modules/aesdchar.ko 2>/dev/null
+
         echo "Starting $DAEMON"
         # -d tells your app to daemonize
         start-stop-daemon -S -n $DAEMON -a /usr/bin/$DAEMON -- -d
@@ -22,6 +26,10 @@ case "$1" in
         echo "Stopping $DAEMON"
         # -s TERM sends the SIGTERM for graceful exit
         start-stop-daemon -K -n $DAEMON -s TERM
+
+        echo "Unloading aesdchar"
+
+        rmmod aesdchar 2>/dev/null
         ;;
     *)
         echo "Usage: $0 {start|stop}"

@@ -15,7 +15,17 @@
 #include <errno.h>
 
 #define PORT 9000
+
+#ifndef USE_AESD_CHAR_DEVICE
+#define USE_AESD_CHAR_DEVICE 1
+#endif
+
+#if USE_AESD_CHAR_DEVICE
+#define DATA_FILE "/dev/aesdchar"
+#else
 #define DATA_FILE "/var/tmp/aesdsocketdata"
+#endif
+
 #define BUFFER_SIZE 1024
 
 //Compatibility Macro
@@ -49,6 +59,7 @@ void signal_handler(int sig) {
     }
 }
 
+#if !USE_AESD_CHAR_DEVICE
 void* timestamp_handler(void* arg) {
     while (!caught_sig) {
         // Sleep in 1s intervals to remain responsive to caught_sig
@@ -75,6 +86,7 @@ void* timestamp_handler(void* arg) {
     }
     return NULL;
 }
+#endif
 
 void* thread_handle_connection(void* thread_param) {
     struct thread_data_t *data = (struct thread_data_t *)thread_param;
@@ -120,14 +132,18 @@ void cleanup() {
     }
     if (server_fd != -1) close(server_fd);
     pthread_mutex_destroy(&file_mutex);
+#if !USE_AESD_CHAR_DEVICE
     remove(DATA_FILE);
+#endif
     closelog();
 }
 
 int main(int argc, char *argv[]) {
     openlog("aesdsocket", LOG_PID, LOG_USER);
 
+#if !USE_AESD_CHAR_DEVICE
     remove(DATA_FILE);
+#endif
 
     struct sigaction sa = {0};
     sa.sa_handler = signal_handler;
@@ -154,8 +170,10 @@ int main(int argc, char *argv[]) {
 
     if (listen(server_fd, 10) < 0) return -1;
 
+#if !USE_AESD_CHAR_DEVICE
     pthread_t timer_thread;
     pthread_create(&timer_thread, NULL, timestamp_handler, NULL);
+#endif
 
     while (!caught_sig) {
         struct sockaddr_in client_addr;
@@ -187,7 +205,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+#if !USE_AESD_CHAR_DEVICE
     pthread_join(timer_thread, NULL);
+#endif
     cleanup();
     return 0;
 }
